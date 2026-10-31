@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0a12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="JoJo's Bizarre Adventure: Phantom Paths — пиксельная action-RPG по мотивам первых трёх частей. Полностью на русском.">
+  <title>JoJo's Bizarre Adventure: Phantom Paths</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230b0a12'/><path d='M8 26L16 5l8 21h-5l-3-9-3 9z' fill='%23f4c542'/></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Игровой мир"></canvas>
+
+    <!-- ============ TITLE ============ -->
+    <section id="title-screen" class="screen active">
+      <canvas id="title-canvas"></canvas>
+      <div class="title-vignette"></div>
+      <div class="title-content">
+        <div class="title-kicker" data-i18n="ui.titleKicker">Фанатская пиксельная сага</div>
+        <h1 class="logo">
+          <span class="logo-top">JoJo's Bizarre Adventure</span>
+          <span class="logo-main">PHANTOM<br>PATHS</span>
+          <span class="logo-ru" data-i18n="ui.titleRu">ФАНТОМНЫЕ ТРОПЫ</span>
+        </h1>
+        <div class="title-parts">
+          <span>PHANTOM BLOOD</span><i>◆</i><span>BATTLE TENDENCY</span><i>◆</i><span>STARDUST CRUSADERS</span>
+        </div>
+        <div class="title-menu">
+          <button id="btn-continue" class="pixel-btn primary" data-i18n="ui.continue">ПРОДОЛЖИТЬ</button>
+          <button id="btn-new" class="pixel-btn" data-i18n="ui.newGame">НОВАЯ ИГРА</button>
+          <button id="btn-title-how" class="pixel-btn small" data-i18n="ui.howToPlay">КАК ИГРАТЬ</button>
+          <button id="btn-title-lang" class="pixel-btn small" data-i18n="ui.language">ЯЗЫК: RU</button>
+          <button id="btn-title-settings" class="pixel-btn small" data-i18n="ui.settings">НАСТРОЙКИ</button>
+        </div>
+        <div class="title-footer">
+          <span data-i18n="ui.fanGame">Фанатская игра по вселенной JoJo. Не связана с Shueisha.</span>
+          <span class="title-version">v1.0 · MOBILE</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CHARACTER SELECT ============ -->
+    <section id="char-screen" class="screen">
+      <div class="screen-head">
+        <button id="btn-char-back" class="icon-btn" aria-label="Назад">‹</button>
+        <div>
+          <div class="eyebrow" data-i18n="ui.chooseHeroEyebrow">СУДЬБА ВЫБИРАЕТ ТЕБЯ</div>
+          <h2 data-i18n="ui.chooseHero">ВЫБЕРИТЕ ГЕРОЯ</h2>
+        </div>
+        <div class="lang-pill" id="char-lang">RU</div>
+      </div>
+      <p class="screen-sub" data-i18n="ui.chooseHeroSub">Каждый герой растёт отдельно. Двое других откроются по мере развития сюжета.</p>
+      <div id="char-cards" class="char-cards"></div>
+      <div class="char-confirm-wrap">
+        <div id="char-selected-info" class="char-selected-info"></div>
+        <button id="btn-start-game" class="pixel-btn primary big" data-i18n="ui.beginPath">НАЧАТЬ ПУТЬ</button>
+      </div>
+    </section>
+
+    <!-- ============ HUD ============ -->
+    <div id="world-ui" class="hidden">
+      <div class="hud-top">
+        <div class="hud-hero">
+          <button id="hud-portrait-btn" class="portrait-frame" aria-label="Профиль героя">
+            <img id="hud-portrait" alt="">
+            <span id="hud-level" class="level-badge">1</span>
+          </button>
+          <div class="hud-hero-info">
+            <div class="hud-name-row"><span id="hud-hero-name">ДЖОНАТАН</span><span id="hud-stance" class="stance-tag">ХАМОН</span></div>
+            <div class="bar hp-bar"><div id="hud-hp-fill" class="bar-fill"></div><span id="hud-hp-text" class="bar-text">120 / 120</span></div>
+            <div class="bar energy-bar"><div id="hud-energy-fill" class="bar-fill"></div><span id="hud-energy-text" class="bar-text">100</span></div>
+          </div>
+        </div>
+        <div class="hud-right">
+          <div class="mini-wrap">
+            <canvas id="minimap" width="112" height="112"></canvas>
+            <button id="btn-menu" class="menu-btn" aria-label="Меню">☰</button>
+          </div>
+          <div class="world-meta">
+            <span id="hud-region">АНГЛИЯ</span>
+            <span id="hud-clock">12:00</span>
+          </div>
+          <div id="hud-weather" class="weather-tag">ДОЖДЬ</div>
+        </div>
+      </div>
+
+      <div id="quest-tracker" class="quest-tracker">
+        <div class="quest-chapter" id="quest-chapter">ЧАСТЬ I</div>
+        <div class="quest-name" id="quest-name">Прибытие в Англию</div>
+        <div class="quest-objective" id="quest-objective">Найдите Спидвагона</div>
+        <div class="compass-row"><span id="quest-arrow" class="compass-arrow">▲</span><span id="quest-distance">—</span></div>
+      </div>
+
+      <div id="boss-bar" class="boss-bar hidden">
+        <div class="boss-top"><span id="boss-name">ДИО БРАНДО</span><span id="boss-phase">ФАЗА I</span></div>
+        <div class="boss-track"><div id="boss-fill" class="boss-fill"></div></div>
+      </div>
+
+      <div id="toasts" class="toasts"></div>
+
+      <div id="controls" class="controls">
+        <div id="joy-zone" class="joy-zone" aria-label="Виртуальный стик">
+          <div class="joy-ring"></div>
+          <div id="joy-knob" class="joy-knob"></div>
+        </div>
+        <div class="action-cluster">
+          <button id="btn-skill-2" class="act-btn skill ult" data-skill="2">
+            <span class="act-icon">✹</span><span class="act-label">УЛЬТ</span>
+            <span class="cd-ring"></span><span class="cd-text"></span>
+          </button>
+          <button id="btn-skill-0" class="act-btn skill s1" data-skill="0">
+            <span class="act-icon">☀</span><span class="act-label">S1</span>
+            <span class="cd-ring"></span><span class="cd-text"></span>
+          </button>
+          <button id="btn-skill-1" class="act-btn skill s2" data-skill="1">
+            <span class="act-icon">✦</span><span class="act-label">S2</span>
+            <span class="cd-ring"></span><span class="cd-text"></span>
+          </button>
+          <button id="btn-attack" class="act-btn attack">
+            <span class="act-icon">✊</span><span class="act-label">УДАР</span>
+          </button>
+          <button id="btn-dodge" class="act-btn dodge">
+            <span class="act-icon">➤</span><span class="act-label">РЫВОК</span>
+          </button>
+          <button id="btn-interact" class="act-btn interact">
+            <span class="act-icon">✋</span><span class="act-label">ДЕЙСТВИЕ</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="interact-prompt" class="interact-prompt hidden"><span class="key-e">E</span><span id="interact-text">Говорить</span></div>
+      <div id="region-banner" class="region-banner hidden"><div class="rb-chapter"></div><div class="rb-name"></div><div class="rb-sub"></div></div>
+      <div id="levelup-banner" class="levelup-banner hidden"><div class="lu-small">УРОВЕНЬ ПОВЫШЕН</div><div class="lu-level">LV <span>2</span></div><div class="lu-hero"></div></div>
+      <div id="death-screen" class="death-screen hidden">
+        <div class="death-title" data-i18n="ui.defeat">ВЫ ПОВЕРЖЕНЫ</div>
+        <p id="death-text">Тьма сгущается... но путь ещё не окончен.</p>
+        <button id="btn-respawn" class="pixel-btn primary" data-i18n="ui.respawn">ВОЗРОДИТЬСЯ</button>
+      </div>
+    </div>
+
+    <!-- ============ DIALOGUE ============ -->
+    <section id="dialogue" class="dialogue hidden">
+      <div class="dlg-box">
+        <div class="dlg-portrait-wrap"><canvas id="dlg-portrait" width="128" height="128"></canvas></div>
+        <div class="dlg-body">
+          <div class="dlg-name" id="dlg-name">СПИДВАГОН</div>
+          <div class="dlg-text" id="dlg-text"></div>
+          <div class="dlg-hint" id="dlg-hint">НАЖМИТЕ, ЧТОБЫ ПРОДОЛЖИТЬ <span>▼</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MENU ============ -->
+    <section id="menu" class="screen menu-screen hidden">
+      <div class="menu-head">
+        <div>
+          <div class="eyebrow" data-i18n="ui.pauseMenu">МЕНЮ ПУТИ</div>
+          <h2 data-i18n="ui.menuTitle">ДНЕВНИК СТРАННИКА</h2>
+        </div>
+        <button id="btn-menu-close" class="icon-btn" aria-label="Закрыть">×</button>
+      </div>
+      <div class="menu-tabs" id="menu-tabs">
+        <button class="menu-tab active" data-tab="heroes" data-i18n="ui.tabHeroes">ГЕРОИ</button>
+        <button class="menu-tab" data-tab="items" data-i18n="ui.tabItems">ПРЕДМЕТЫ</button>
+        <button class="menu-tab" data-tab="quests" data-i18n="ui.tabQuests">ЗАДАНИЯ</button>
+        <button class="menu-tab" data-tab="map" data-i18n="ui.tabMap">КАРТА</button>
+        <button class="menu-tab" data-tab="settings" data-i18n="ui.tabSettings">НАСТРОЙКИ</button>
+      </div>
+      <div id="menu-content" class="menu-content"></div>
+    </section>
+
+    <!-- ============ MODALS ============ -->
+    <div id="modal" class="modal hidden">
+      <div class="modal-box">
+        <h3 id="modal-title">ВНИМАНИЕ</h3>
+        <div id="modal-body"></div>
+        <div id="modal-actions" class="modal-actions"></div>
+      </div>
+    </div>
+
+    <section id="tutorial" class="screen tutorial-screen hidden">
+      <div class="tutorial-card">
+        <div class="eyebrow" data-i18n="ui.tutorialEyebrow">ПЕРЕД ТЕМ КАК ОТПРАВИТЬСЯ В ПУТЬ</div>
+        <h2 data-i18n="ui.howToPlay">КАК ИГРАТЬ</h2>
+        <div id="tutorial-body" class="tutorial-body"></div>
+        <button id="btn-tutorial-close" class="pixel-btn primary" data-i18n="ui.gotIt">ПОНЯТНО</button>
+      </div>
+    </section>
+
+    <section id="ending" class="screen ending-screen hidden">
+      <div class="ending-rays"></div>
+      <div class="ending-card">
+        <div class="eyebrow" data-i18n="ui.endingEyebrow">ПУТЬ ЗАВЕРШЁН</div>
+        <h2 id="ending-title">СОЛНЦЕ НАД КАИРОМ</h2>
+        <p id="ending-text"></p>
+        <div id="ending-stats" class="ending-stats"></div>
+        <button id="btn-ending-continue" class="pixel-btn primary" data-i18n="ui.freeRoam">СВОБОДНАЯ ИГРА</button>
+      </div>
+    </section>
+
+    <div id="fade" class="fade"></div>
+    <div id="rotate-hint" class="rotate-hint hidden"><span>↻</span><p data-i18n="ui.rotateHint">Поверните устройство для более широкого обзора</p></div>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/artworld.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/story.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
